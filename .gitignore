@@ -1,0 +1,8 @@
+venv/
+*.csv
+assets/engine/
+onyx-dashboard/node_modules/
+# Ignore build folders and executables
+build/
+dist/
+*.exe

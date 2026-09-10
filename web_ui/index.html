@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Onyx Chess Engine & Trainer</title>
+    
+    <!-- jQuery & Chessboard.js -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    
+    <!-- Chess.js Rules Engine -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Navigation Menu -->
+        <nav class="sidebar-nav">
+            <div class="logo-area">
+                <h2>♟️ Onyx</h2>
+            </div>
+            <ul class="nav-links">
+                <li id="nav-dashboard" class="active" onclick="switchMode('dashboard')">🏠 Player Dashboard</li>
+                <li id="nav-sparring" onclick="switchMode('sparring')">🤖 Sparring Bot</li>
+                <li id="nav-play_bot" onclick="switchMode('play_bot')">♟️ Play vs Bot</li>
+                <li id="nav-pass_play" onclick="switchMode('pass_play')">👥 Pass 'N Play</li>
+
+                <li id="nav-interrogator" onclick="switchMode('interrogator')">🎯 Opening Coach</li>
+                <li id="nav-theory_library" onclick="switchMode('theory_library')">📚 Theory Library</li>
+                <li id="nav-blunder_coach" onclick="switchMode('blunder_coach')">🧠 Blunder Coach</li>
+                <li id="nav-pgn_analysis" onclick="switchMode('pgn_analysis')">📝 PGN Analysis</li>
+
+                <li id="nav-puzzles" onclick="switchMode('puzzles')">🧩 Puzzle Dashboard</li>
+                <li id="nav-timed_mode" onclick="switchMode('timed_mode')">⏱️ Timed Mode</li>
+                <li id="nav-blindfold" onclick="switchMode('blindfold')">🙈 Blindfold Mode</li>
+
+                <li id="nav-lichess_explorer" onclick="switchMode('lichess_explorer')">🌐 Lichess Explorer</li>
+                <li id="nav-settings" onclick="switchMode('settings')">⚙️ Settings</li>
+            </ul>
+        </nav>
+
+        <!-- Main Workspace -->
+        <main class="workspace">
+            <header class="app-header">
+                <h1 id="mode-title">Dynamic Opening Interrogator</h1>
+                <p id="mode-desc">Train your repertoire against strict book moves.</p>
+            </header>
+
+            <!-- Dynamic Options Menu -->
+            <div id="mode-options" style="display: none; margin-bottom: 20px; background-color: var(--card-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); flex-wrap: wrap; gap: 15px; align-items: center;">
+                
+                <div id="select-group-1">
+                    <label id="options-label-1" style="font-weight: bold; margin-right: 8px;">Option 1:</label>
+                    <select id="variant-selector-1" onchange="checkCustomTime()" style="padding: 8px; border-radius: 4px; background-color: var(--bg-dark); color: white; border: 1px solid #5c5a57;"></select>
+                </div>
+
+                <div id="select-group-2" style="display: none;">
+                    <label id="options-label-2" style="font-weight: bold; margin-right: 8px;">Option 2:</label>
+                    <select id="variant-selector-2" style="padding: 8px; border-radius: 4px; background-color: var(--bg-dark); color: white; border: 1px solid #5c5a57;"></select>
+                </div>
+
+                <div id="select-group-3" style="display: none;">
+                    <label id="options-label-3" style="font-weight: bold; margin-right: 8px;">Your Side:</label>
+                    <select id="variant-selector-3" style="padding: 8px; border-radius: 4px; background-color: var(--bg-dark); color: white; border: 1px solid #5c5a57;">
+                        <option value="white">White</option>
+                        <option value="black">Black</option>
+                        <option value="random">Random Side</option>
+                    </select>
+                </div>
+
+                <!-- Custom Time Input (Hidden by default) -->
+                <div id="custom-time-group" style="display: none; gap: 8px; align-items: center;">
+                    <input type="number" id="custom-minutes" placeholder="Mins" style="width: 65px; padding: 6px; background: var(--bg-dark); color: white; border: 1px solid #5c5a57; border-radius: 4px;">
+                    <span>+</span>
+                    <input type="number" id="custom-increment" placeholder="Inc (s)" style="width: 65px; padding: 6px; background: var(--bg-dark); color: white; border: 1px solid #5c5a57; border-radius: 4px;">
+                </div>
+
+                <!-- PGN Paste Area (Hidden by default) -->
+                <div id="pgn-input-group" style="display: none; width: 100%;">
+                    <textarea id="pgn-textarea" placeholder="Paste raw PGN moves or file path here..." style="width: 100%; height: 80px; background: var(--bg-dark); color: white; border: 1px solid #5c5a57; border-radius: 4px; padding: 8px; font-family: monospace;"></textarea>
+                </div>
+
+                <button class="btn btn-secondary" style="width: auto; margin-top: 0; padding: 8px 16px;" onclick="loadVariant()">Apply & Start</button>
+            </div>
+
+            <div class="board-layout">
+                <!-- Evaluation Bar -->
+                <div class="eval-bar-container">
+                    <div id="eval-bar" class="eval-bar" style="height: 50%;"></div>
+                </div>
+                
+                <!-- Interactive Chessboard -->
+                <div id="myBoard" style="width: 480px"></div>
+
+                <!-- Control Panel -->
+                <aside class="control-panel">
+                    <!-- Clocks -->
+                    <div class="panel-card" id="clock-card" style="display: flex; justify-content: space-between; text-align: center;">
+                        <div style="flex: 1;">
+                            <small style="color: #a5a5a5;" id="black-label">BLACK (Bot)</small>
+                            <div id="clock-black" style="font-size: 24px; font-weight: bold; font-family: monospace;">10:00</div>
+                        </div>
+                        <div style="flex: 1; border-left: 1px solid var(--border-color);">
+                            <small style="color: #a5a5a5;" id="white-label">WHITE (You)</small>
+                            <div id="clock-white" style="font-size: 24px; font-weight: bold; font-family: monospace; color: var(--accent-teal);">10:00</div>
+                        </div>
+                    </div>
+
+                    <!-- Move History -->
+                    <div class="panel-card">
+                        <h3>Move History</h3>
+                        <div id="move-log" class="move-log-box">
+                            <p class="placeholder-text">Moves will appear here...</p>
+                        </div>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="panel-card">
+                        <h3>Controls</h3>
+                        <button class="btn btn-secondary" id="startBtn">Start Game</button>
+                        <button class="btn btn-outline" id="clearBtn">Clear Board</button>
+                    </div>
+                </aside>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

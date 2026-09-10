@@ -1,0 +1,180 @@
+:root {
+    --bg-dark: #312e2b;
+    --card-bg: #262421;
+    --accent-teal: #81b64c;
+    --text-primary: #eeeeee;
+    --border-color: #403d39;
+    --sidebar-bg: #21201d;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Master Layout: Sidebar Left, Content Right */
+.app-layout {
+    display: flex;
+    flex-direction: row;
+    width: 100vw;
+    height: 100vh;
+}
+
+/* Permanent Left Sidebar */
+.sidebar-nav {
+    width: 260px;
+    height: 100vh;
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--border-color);
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow-y: auto;
+}
+
+.logo-area {
+    padding: 0 20px 15px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 10px;
+}
+
+.logo-area h2 {
+    margin: 0;
+    font-size: 22px;
+    color: var(--accent-teal);
+}
+
+.nav-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-links li {
+    padding: 12px 20px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: background 0.2s;
+    color: #c3c2c0;
+}
+
+.nav-links li:hover, .nav-links li.active {
+    background-color: var(--bg-dark);
+    border-left: 4px solid var(--accent-teal);
+    color: #ffffff;
+}
+
+/* Main Right Workspace */
+.workspace {
+    flex: 1;
+    height: 100vh;
+    padding: 25px 35px;
+    overflow-y: auto;
+}
+
+.app-header {
+    margin-bottom: 20px;
+}
+
+.app-header h1 {
+    margin: 0 0 6px 0;
+    font-size: 26px;
+}
+
+.app-header p {
+    margin: 0;
+    color: #a5a5a5;
+    font-size: 14px;
+}
+
+.board-layout {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+/* Eval Bar */
+.eval-bar-container {
+    width: 18px;
+    height: 480px;
+    background-color: #403d39;
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column-reverse;
+}
+
+.eval-bar {
+    width: 100%;
+    background-color: #ffffff;
+    transition: height 0.3s;
+}
+
+/* Control Panel */
+.control-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 320px;
+}
+
+.panel-card {
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+.panel-card h3 {
+    margin-top: 0;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px;
+    font-size: 16px;
+}
+
+.move-log-box {
+    height: 160px;
+    overflow-y: auto;
+    color: #a5a5a5;
+    font-size: 14px;
+}
+
+.btn {
+    width: 100%;
+    padding: 10px;
+    margin-top: 8px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-secondary {
+    background-color: var(--accent-teal);
+    color: white;
+}
+
+.btn-outline {
+    background-color: transparent;
+    border: 2px solid #5c5a57;
+    color: white;
+}
+
+/* Blindfold Mode - Hides pieces but keeps them draggable */
+.blindfold-active .piece-417db {
+    opacity: 0 !important;
+}

@@ -1,0 +1,72 @@
+{
+    "White Repertoire": {
+        "link": "https://www.notion.so/Catalan-opening-repertoire-3947585e197e80369c8bfbba6b0e7410",
+        "lines": {
+            "Catalan Main Line": {
+                "name": "Catalan Main Line",
+                "moves": ["d4", "Nf6", "c4", "e6", "g3", "d5", "Bg2", "Be7", "Nf3", "O-O", "O-O", "Nbd7", "Qc2", "c6", "Nbd2", "b6"]
+            },
+            "Open Catalan Main Line": {
+                "name": "Open Catalan Main Line",
+                "moves": ["d4", "Nf6", "c4", "e6", "g3", "d5", "Bg2", "dxc4", "Nf3", "a6", "O-O", "Nc6"]
+            },
+            "Most Played Moves": {
+                "name": "Most Played Moves in Catalan",
+                "moves": ["d4", "Nf6", "c4", "e6", "g3", "d5", "Bg2", "Be7", "Nf3", "O-O", "O-O", "dxc4", "Qc2", "a6", "a4", "Bd7", "Qxc4"]
+            },
+            "Catalan Trap": {
+                "name": "Trap in the Catalan Opening",
+                "moves": ["d4", "Nf6", "c4", "e6", "Nf3", "d5", "g3", "Be7", "Bg2", "O-O", "O-O", "dxc4", "Qc2", "b5", "a4", "c6", "axb5", "cxb5", "Ng5", "Nd5", "Qxh7#"]
+            },
+            "Example Game": {
+                "name": "A Game Example",
+                "moves": ["d4", "Nf6", "c4", "e6", "g3", "d5", "Bg2", "Be7", "Nf3", "O-O", "O-O", "Nbd7", "Qc2", "a5", "Bg5", "h6", "Bxf6", "Nxf6", "Nc3", "c6", "Rfd1", "b6", "e4", "dxc4", "Ne5", "Bb7", "Nxc4", "b5", "Ne3", "Rc8", "Rac1", "Qb6", "e5", "Nd5", "Ne4", "Nb4", "Qe2", "Nxa2", "Ra1", "Nb4", "Nf6+", "Bxf6", "exf6", "Qd8", "fxg7", "Kxg7", "Ng4", "Ra8", "Qe5+", "f6", "Qxe6", "Bc8", "Qe2", "Qd6", "Ne3", "Bd7", "d5", "c5", "Qxb5", "Nc2", "Qc6", "Qe7", "Qc7", "Nxe3", "d6", "Qe6", "Re1", "Ra6", "Rad1", "Qg4", "h3", "Qa4", "b3", "Qxb3", "Qxd7+", "Rf7", "Qxf7+", "Kxf7", "d7", "Nxg2", "Re7+", "Kxe7", "d8=Q+", "Kf7", "Rd7+", "Kg6", "Qe8+", "Kg5"]
+            }
+        }
+    },
+    "Black Repertoire": {
+        "link": "Nimzo: https://www.notion.so/Nimzo-Indian-rep-3967585e197e80519483f7b7f3d47b04 | Sicilian: https://www.notion.so/Sicilian-opening-repo-and-notes-3957585e197e806ebf8be5d7de616add",
+        "lines": {
+            "Nimzo Basic": {
+                "name": "Basic Opening Move after 1. d4",
+                "moves": ["d4", "Nf6", "c4", "e6", "Nc3", "Bb4", "Qc2", "O-O", "a3", "Bxc3+", "Qxc3"]
+            },
+            "So vs Aronian": {
+                "name": "Sample Game: Wesley So vs Levon Aronian",
+                "moves": ["d4", "Nf6", "c4", "e6", "Nc3", "Bb4", "f3", "c5", "d5", "O-O", "e4", "d6", "Ne2", "a6", "a4", "Ba5", "Bd2", "exd5", "cxd5", "Nh5", "g3", "Nd7", "Bg2", "b5", "g4", "b4", "Nb1", "Qh4+", "Kf1", "Ne5", "Be1", "Qf6", "gxh5", "Nxf3", "Bf2", "Bg4", "Qc1", "Nd4", "Nxd4", "cxd4", "e5", "dxe5", "Nd2", "Rac8", "Qb1", "b3", "Nxb3", "Bb6", "a5", "Ba7", "Kg1", "Bf5", "Be4", "Qg5+", "Kf1", "Qf4"]
+            },
+            "Nimzo vs London": {
+                "name": "Nimzo Against the London",
+                "moves": ["d4", "Nf6", "Nf3", "e6", "Bf4", "b6", "e3", "Bb7", "Nbd2", "c5", "c3", "Be7", "h3", "O-O", "Bd3", "d6", "O-O", "Nbd7", "Qe2", "cxd4", "exd4", "a6", "Rfe1", "Re8", "a4", "Qc7", "Bh2", "Bf8", "Rab1", "g6"]
+            },
+            "Anti-Nimzo Line": {
+                "name": "Line Where White Tries to Stop Nimzo",
+                "moves": ["d4", "Nf6", "c4", "e6", "a3", "c5", "d5", "exd5", "cxd5", "b5", "Nc3", "b4"]
+            },
+            "Nimzo Trap": {
+                "name": "DO NOT FALL FOR THIS TRAP",
+                "moves": ["d4", "Nf6", "c4", "e6", "Nc3", "Bb4", "e3", "b6", "Bd3", "Bb7", "Nf3", "h6", "O-O", "d6", "Qa4+", "Nc6", "d5", "Bxc3", "dxc6"]
+            },
+            "Sicilian Dragon": {
+                "name": "Sicilian Dragon Variation",
+                "moves": ["e4", "c5", "Nf3", "d6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "g6", "Be3", "Bg7", "f3", "O-O", "Qd2", "Nc6", "g4", "Be6", "Nxe6", "fxe6", "O-O-O", "Ne5", "Be2", "Qc8", "h4"]
+            },
+            "Hyper Accelerated Dragon": {
+                "name": "Hyper Accelerated Dragon",
+                "moves": ["e4", "c5", "Nf3", "g6", "d4", "cxd4", "Nxd4", "Nc6", "Nc3", "Bg7", "Be3", "Nf6", "Bc4", "O-O", "Bb3", "d6", "f3", "Bd7"]
+            },
+            "Najdorf Variation 1": {
+                "name": "Najdorf Variation 1",
+                "moves": ["e4", "c5", "Nf3", "d6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "a6", "Bg5", "e6", "f4", "Be7", "Qf3", "Qb6", "O-O-O", "Nbd7", "h4", "h6", "Bxf6", "Bxf6"]
+            },
+            "Najdorf Variation 2": {
+                "name": "Najdorf Variation 2",
+                "moves": ["e4", "c5", "Nf3", "d6", "d4", "cxd4", "Nxd4", "Nf6", "Nc3", "a6", "Bg5", "e6", "f4", "Qb6", "Qd2", "Qxb2", "Rb1", "Qa3", "f5", "Nc6", "fxe6", "fxe6", "Nxc6", "bxc6", "e5", "dxe5", "Bxf6", "gxf6", "Ne4", "Qxa2", "Rd1", "Be7", "Be2", "O-O", "O-O", "Ra7", "Rf3", "Rd7", "Rg3+", "Kh8", "Qh6", "Rxd1+", "Bxd1", "Rf7", "Qh5", "Qa5", "Kf1", "Qd8", "Qxf7", "Qxd1+", "Kf2", "Qxc2+", "Kf3", "Qd1+"]
+            },
+            "Dealing with 1. c4": {
+                "name": "Dealing with 1. c4 / f4",
+                "moves": ["f4", "c5", "e4", "d6", "Nf3", "g6", "Bc4", "Bg7", "O-O", "Nf6", "d3", "O-O", "Nc3", "a6", "a4", "Nc6", "Be3", "b6", "Nd5"]
+            }
+        }
+    }
+}
