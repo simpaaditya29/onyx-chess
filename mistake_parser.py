@@ -6,6 +6,7 @@ import os
 import sys
 import pandas as pd
 from dataclasses import dataclass, asdict
+import datetime
 
 STOCKFISH_PATH = "./assets/engine/stockfish.exe"
 PUZZLE_DB = "data/blunder_bank.csv"
@@ -18,6 +19,7 @@ class BlunderPuzzle:
     turn: str
     cp_loss: int
     move_number: int
+    timestamp: datetime.datetime
 
 def extract_blunder_puzzles(pgn_source, centipawn_threshold=150):
     """
@@ -74,7 +76,8 @@ def extract_blunder_puzzles(pgn_source, centipawn_threshold=150):
                 best_move=best_move,
                 turn="White" if is_white_turn else "Black",
                 cp_loss=cp_loss,
-                move_number=move_number
+                move_number=move_number,
+                timestamp=datetime.datetime.now()
             ))
 
         prev_eval = current_eval
@@ -95,9 +98,17 @@ def save_puzzles_to_bank(puzzles: list[BlunderPuzzle]):
     
     df_new["solved"] = False
     df_new["attempts"] = 0
+    # NEW: Leitner Spaced Repetition Columns
+    df_new["box_level"] = 1
+    df_new["next_review_date"] = datetime.date.today().isoformat()
     
     if os.path.exists(PUZZLE_DB):
         df_existing = pd.read_csv(PUZZLE_DB)
+        # Ensure older files that don't have the new columns get them
+        if "box_level" not in df_existing.columns:
+            df_existing["box_level"] = 1
+            df_existing["next_review_date"] = datetime.date.today().isoformat()
+            
         df_combined = pd.concat([df_existing, df_new]).drop_duplicates(subset=["fen_before"], keep="first")
         df_combined.to_csv(PUZZLE_DB, index=False)
     else:
@@ -136,3 +147,5 @@ if __name__ == "__main__":
         print(f"Saved successfully to {PUZZLE_DB}")
     else:
         print("No blunders found above the threshold in this game.")
+
+

@@ -613,35 +613,47 @@ class ChessBoardGUI:
         self.user_move = None
         return move_to_return
 
+    def _get_square_center(self, square_name):
+            """Helper method to get the (x, y) pixel coordinates, respecting flipped perspective."""
+            col = ord(square_name[0]) - ord('a')
+            row = 8 - int(square_name[1])
+
+            if self.flip_board:
+                col = 7 - col
+                row = 7 - row
+
+            x = (col * self.square_size) + (self.square_size // 2)
+            y = (row * self.square_size) + (self.square_size // 2)
+            return x, y
+
     def on_square_click(self, event):
-        """
-        Calculates which square you clicked based on where your mouse is.
-        """
-        col = event.x // self.square_size
-        row = event.y // self.square_size
+            """Calculates which square was clicked, respecting flipped perspective."""
+            col = event.x // self.square_size
+            row = event.y // self.square_size
 
-        # Make sure the click is actually inside the 8x8 board
-        col = max(0, min(7, col))
-        row = max(0, min(7, row))
+            col = max(0, min(7, col))
+            row = max(0, min(7, row))
 
-        # Convert the click into a chess square (like 'e2' or 'e4')
-        file_char = chr(ord('a') + col)
-        rank_num = 8 - row
-        clicked_square = f"{file_char}{rank_num}"
+            # Adjust indices if board is flipped for Black
+            if self.flip_board:
+                file_char = chr(ord('a') + (7 - col))
+                rank_num = row + 1
+            else:
+                file_char = chr(ord('a') + col)
+                rank_num = 8 - row
 
-        if self.selected_square is None:
-            # Click 1: Select the piece you want to move
-            self.selected_square = clicked_square
-            print(f"Selected: {self.selected_square}")
-        elif self.selected_square == clicked_square:
-            # If you click the exact same piece again, it deselects it
-            self.selected_square = None
-            print("Deselected square.")
-        else:
-            # Click 2: Select where you want the piece to go
-            self.user_move = f"{self.selected_square}{clicked_square}"
-            print(f"Played move: {self.user_move}")
-            self.selected_square = None    
+            clicked_square = f"{file_char}{rank_num}"
+
+            if self.selected_square is None:
+                self.selected_square = clicked_square
+                print(f"Selected: {self.selected_square}")
+            elif self.selected_square == clicked_square:
+                self.selected_square = None
+                print("Deselected square.")
+            else:
+                self.user_move = f"{self.selected_square}{clicked_square}"
+                print(f"Played move: {self.user_move}")
+                self.selected_square = None  
 import tkinter as tk
 
 class BlindfoldHUD:

@@ -970,3 +970,84 @@ def generate_post_game_report(game_moves):
     print(f"⚠️ Inaccuracies (50+ CP): {inaccuracies}")
     print(f"❌ Blunders (200+ CP):   {blunders}")
     print("="*50 + "\n")
+
+
+# ==========================================
+# ONYX BLUNDER BANK ANALYTICS
+# ==========================================
+import os
+import pandas as pd
+
+PUZZLE_DB = "data/blunder_bank.csv"
+
+def generate_blunder_bank_report():
+    """Reads blunder_bank.csv and displays solver performance metrics."""
+    if not os.path.exists(PUZZLE_DB):
+        print("\n⚠️ No blunder data found at data/blunder_bank.csv.")
+        return
+
+    df = pd.read_csv(PUZZLE_DB)
+    if df.empty:
+        print("\n⚠️ Blunder database is empty.")
+        return
+
+    total = len(df)
+    solved = len(df[df["solved"] == True])
+    unsolved = total - solved
+
+    first_attempt_solved = len(df[(df["solved"] == True) & (df["attempts"] == 1)])
+    first_try_pct = (first_attempt_solved / solved * 100) if solved > 0 else 0
+    avg_cpl = df["cp_loss"].mean()
+
+    # Breakdown by color
+    white_blunders = len(df[df["turn"].str.strip().str.lower() == "white"])
+    black_blunders = len(df[df["turn"].str.strip().str.lower() == "black"])
+
+    print("\n" + "=" * 50)
+    print(" 📊 ONYX BLUNDER BANK PERFORMANCE REPORT")
+    print("=" * 50)
+    print(f"Total Blunders Tracked:    {total}")
+    print(f"  • White Blunders:        {white_blunders}")
+    print(f"  • Black Blunders:        {black_blunders}")
+    print(f"Average Blunder Severity:  -{avg_cpl:.0f} cp")
+    print("-" * 50)
+    print(f"Puzzles Solved:            {solved} / {total} ({solved/total*100:.1f}%)")
+    print(f"Remaining to Solve:        {unsolved}")
+    print(f"First-Attempt Precision:   {first_try_pct:.1f}%")
+    print("=" * 50 + "\n")
+
+
+import requests
+
+def query_lichess_masters(fen):
+    """Hits the Lichess API to find Master-level continuations for a given FEN."""
+    print(f"\n🔍 Querying Lichess Master Database for position...")
+    try:
+        url = "https://explorer.lichess.ovh/masters"
+        params = {"fen": fen, "moves": 4} # Fetch the top 4 most popular moves
+        response = requests.get(url, params=params).json()
+        
+        total_games = response.get('white', 0) + response.get('draws', 0) + response.get('black', 0)
+        if total_games == 0:
+            print("No master games reached this position.")
+            return
+
+        print(f"Total Master Games: {total_games}")
+        print("Top Grandmaster Continuations:")
+        
+        for move in response.get('moves', []):
+            played = move['white'] + move['draws'] + move['black']
+            win_rate = (move['white'] / played) * 100
+            print(f" • {move['san']}: Played {played} times (White win rate: {win_rate:.1f}%)")
+            
+    except Exception as e:
+        print(f"⚠️ Failed to reach Lichess API: {e}")
+
+if __name__ == "__main__":
+    # Tests the standard starting position
+    query_lichess_masters("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+    generate_blunder_bank_report()
+
+
+
+   
