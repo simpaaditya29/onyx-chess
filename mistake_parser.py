@@ -5,11 +5,13 @@ import datetime
 import chess
 import chess.pgn
 import chess.engine
+import chess.polyglot
 import pandas as pd
 from dataclasses import dataclass, asdict
 
 STOCKFISH_PATH = "./assets/engine/stockfish.exe"
 PUZZLE_DB = "data/blunder_bank.csv"
+POLYGLOT_PATH = "assets/books/repertoire.bin" # Optional polyglot book for deep repertoire checking
 
 @dataclass
 class BlunderPuzzle:
@@ -20,13 +22,15 @@ class BlunderPuzzle:
     cp_loss: int
     timestamp: datetime.datetime
     complexity_depth: int = 0
+    eco: str = "???"
+    opening_name: str = "Unknown"
+    is_opening_trap: bool = False
 
 def extract_blunder_puzzles(pgn_source, centipawn_threshold=150):
     """Analyzes a game and returns a list of blunder puzzles."""
     engine = chess.engine.SimpleEngine.popen_uci(STOCKFISH_PATH)
     puzzles = []
 
-    # Detect whether pgn_source is a file path or raw PGN text
     if os.path.exists(pgn_source):
         with open(pgn_source, "r", encoding="utf-8") as f:
             game = chess.pgn.read_game(f)
@@ -38,19 +42,31 @@ def extract_blunder_puzzles(pgn_source, centipawn_threshold=150):
         print("Error: Could not parse any valid chess game from the input.")
         engine.quit()
         return puzzles
+        
+    # Extract structural opening data from the PGN headers
+    eco = game.headers.get("ECO", "???")
+    opening = game.headers.get("Opening", "Unknown Opening")
 
     board = game.board()
     prev_eval = engine.analyse(board, chess.engine.Limit(time=0.1))["score"].white().score(mate_score=10000)
 
     move_number = 1
+    
+    # Pre-load Polyglot Book if it exists
+    polyglot_reader = None
+    if os.path.exists(POLYGLOT_PATH):
+        polyglot_reader = chess.polyglot.open_reader(POLYGLOT_PATH)
+
     for move in game.mainline_moves():
         is_white_turn = board.turn
         fen_before = board.fen()
+        
+        # Check if the position exists within the known polyglot repertoire book
+        in_book = False
+        if polyglot_reader:
+            in_book = not polyglot_reader.get(board) is None
 
-        # Determine engine's best move before the move was played
         best_move = engine.play(board, chess.engine.Limit(time=0.1)).move.uci()
-
-        # Push actual played move
         board.push(move)
         
         info = engine.analyse(board, chess.engine.Limit(time=0.1))
@@ -58,7 +74,6 @@ def extract_blunder_puzzles(pgn_source, centipawn_threshold=150):
         eval_shift = current_eval - prev_eval
         complexity_depth = info.get("depth", 0)
 
-        # Check for significant blunders (> threshold drop)
         is_blunder = False
         cp_loss = 0
         if is_white_turn and eval_shift < -centipawn_threshold:
@@ -69,6 +84,8 @@ def extract_blunder_puzzles(pgn_source, centipawn_threshold=150):
             cp_loss = abs(eval_shift)
 
         if is_blunder:
+            # Tag as an opening trap if it occurs in the first 10 moves or while still in book theory
+            is_trap = (move_number <= 10) or in_book
             puzzles.append(BlunderPuzzle(
                 fen_before=fen_before,
                 turn="White" if is_white_turn else "Black",
@@ -76,13 +93,19 @@ def extract_blunder_puzzles(pgn_source, centipawn_threshold=150):
                 best_move=best_move,
                 cp_loss=cp_loss,
                 timestamp=datetime.datetime.now(),
-                complexity_depth=complexity_depth
+                complexity_depth=complexity_depth,
+                eco=eco,
+                opening_name=opening,
+                is_opening_trap=is_trap
             ))
 
         prev_eval = current_eval
         if not is_white_turn:
             move_number += 1
 
+    if polyglot_reader:
+        polyglot_reader.close()
+        
     engine.quit()
     return puzzles
 
@@ -107,6 +130,14 @@ def save_puzzles_to_bank(puzzles):
         move = chess.Move.from_uci(row['best_move'])
         
         tags = []
+        
+        # Inject the ECO code directly into the spaced repetition tags
+        if row.get('is_opening_trap'):
+            tags.append("Opening Trap")
+            eco_val = str(row.get('eco', ''))
+            if eco_val and eco_val != "???":
+                tags.append(eco_val)
+        
         if len(board.piece_map()) <= 12: 
             tags.append("Endgame")
         elif len(board.piece_map()) >= 24: 
@@ -128,6 +159,9 @@ def save_puzzles_to_bank(puzzles):
     
     df_new["tags"] = tags_list
     
+    if 'is_opening_trap' in df_new.columns:
+        df_new = df_new.drop(columns=['is_opening_trap'])
+    
     if os.path.exists(PUZZLE_DB):
         df_existing = pd.read_csv(PUZZLE_DB)
         if "box_level" not in df_existing.columns:
@@ -137,6 +171,10 @@ def save_puzzles_to_bank(puzzles):
             df_existing["tags"] = "Untagged"
         if "complexity_depth" not in df_existing.columns:
             df_existing["complexity_depth"] = 0
+        if "eco" not in df_existing.columns:
+            df_existing["eco"] = "???"
+        if "opening_name" not in df_existing.columns:
+            df_existing["opening_name"] = "Unknown"
             
         df_combined = pd.concat([df_existing, df_new]).drop_duplicates(subset=["fen_before"], keep="first")
         df_combined.to_csv(PUZZLE_DB, index=False)
@@ -145,7 +183,7 @@ def save_puzzles_to_bank(puzzles):
 
 if __name__ == "__main__":
     print("=" * 50)
-    print(" Onyx Chess Mistake Parser")
+    print(" Onyx Chess Mistake Parser (Polyglot Enabled)")
     print("=" * 50)
     print("Choose input method:")
     print(" [1] Paste raw PGN text directly")

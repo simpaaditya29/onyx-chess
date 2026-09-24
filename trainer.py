@@ -18,7 +18,6 @@ def format_speech_move(san_move):
     if speech == "O-O": return "Castles kingside"
     if speech == "O-O-O": return "Castles queenside"
     
-    # Add spacing between letters and numbers for better TTS pronunciation (e.g., "e 4")
     formatted_speech = ""
     for char in speech:
         if char.isdigit():
@@ -27,6 +26,82 @@ def format_speech_move(san_move):
             formatted_speech += char
     return formatted_speech.strip()
 
+def run_sandbox(board, engine, gui, is_blindfold):
+    """Activates a free-analysis mode with live Stockfish evaluation arrows and move tracking."""
+    print("\n🔬 ANALYSIS SANDBOX ACTIVE")
+    print("Explore candidate moves. Commands:")
+    print(" - [Type UCI move]: Play a move (e.g., e2e4)")
+    print(" - 'spar': Let Stockfish play the current turn")
+    print(" - 'undo': Take back the last move")
+    print(" - 'exit': Return to the puzzle queue")
+    
+    move_log = []
+
+    while True:
+        info = engine.analyse(board, chess.engine.Limit(time=0.1))
+        score = info["score"].white().score(mate_score=10000)
+        best_move = info.get("pv", [None])[0]
+        
+        if not is_blindfold:
+            gui.update_eval(score)
+            gui.clear_arrows()
+            if best_move:
+                gui.draw_arrow(best_move.uci()[:2], best_move.uci()[2:4], color="#3498db")
+            gui.draw_board()
+            gui.populate_history()
+            gui.show()
+            
+            if move_log:
+                print(f"📝 Current Variation: {' '.join(move_log)}")
+                
+            user_move = gui.get_mouse_move()
+        else:
+            if best_move:
+                print(f"🤖 Engine suggests: {best_move.uci()} (Eval: {score/100:.2f})")
+            if move_log:
+                print(f"📝 Current Variation: {' '.join(move_log)}")
+            user_move = input("\nEnter command or move: ").strip().lower()
+
+        if user_move in ["quit", "exit", "next"]:
+            if not is_blindfold:
+                gui.clear_arrows()
+            break
+            
+        if user_move == "undo":
+            if move_log and len(board.move_stack) > 0:
+                board.pop()
+                move_log.pop()
+            else:
+                print("⚠️ Cannot undo further. Back at starting position.")
+            continue
+
+        if user_move == "spar":
+            print("🤺 Engine takes over...")
+            engine_reply = engine.play(board, chess.engine.Limit(time=0.5)).move
+            if engine_reply:
+                san_move = board.san(engine_reply)
+                board.push(engine_reply)
+                move_log.append(f"{san_move}(Eng)")
+            else:
+                print("🏆 Board is terminal.")
+            continue
+            
+        try:
+            move_obj = chess.Move.from_uci(user_move)
+            if move_obj not in board.legal_moves:
+                move_obj = chess.Move.from_uci(user_move + "q")
+            if move_obj in board.legal_moves:
+                san_move = board.san(move_obj)
+                board.push(move_obj)
+                move_log.append(san_move)
+            else:
+                print("⚠️ Illegal move.")
+        except Exception:
+            if not is_blindfold and user_move == "":
+                continue
+            print("⚠️ Invalid format. Use UCI (e.g., e7e5) or valid commands.")
+            continue
+
 def run_puzzle_gui_session():
     if not os.path.exists(PUZZLE_DB):
         print(f"Error: {PUZZLE_DB} not found. Run mistake_parser.py first!")
@@ -34,18 +109,22 @@ def run_puzzle_gui_session():
 
     df = pd.read_csv(PUZZLE_DB)
     today = datetime.date.today().isoformat()
+    
+    if "next_review_date" not in df.columns:
+        df["next_review_date"] = today
+        
     unsolved = df[df["next_review_date"] <= today]
 
     if unsolved.empty:
         print("🎉 All caught up! No puzzles due for review today.")
         return
 
-    # NEW: Dynamic Theme Filtering
     print("\n🔍 Scanning due puzzles for tactical themes...")
     unique_themes = set()
     for tag_string in unsolved['tags'].dropna():
-        for t in str(tag_string).split(','):
-            unique_themes.add(t.strip())
+        if tag_string != "Untagged":
+            for t in str(tag_string).split(','):
+                unique_themes.add(t.strip())
             
     theme_list = sorted(list(unique_themes))
     
@@ -66,11 +145,10 @@ def run_puzzle_gui_session():
     mode = input("\nSelect Training Mode:\n [1] Standard Visual Board\n [2] Blindfold Mode (Audio Enabled)\nEnter choice (1 or 2): ").strip()
     is_blindfold = (mode == "2")
 
-    # Initialize TTS Engine
     tts_engine = None
     if is_blindfold:
         tts_engine = pyttsx3.init()
-        tts_engine.setProperty('rate', 160) # Slightly slower for clarity
+        tts_engine.setProperty('rate', 160)
         print("🔊 Audio announcer initialized.")
 
     engine = chess.engine.SimpleEngine.popen_uci(STOCKFISH_PATH)
@@ -107,7 +185,7 @@ def run_puzzle_gui_session():
             gui.update_eval(score_baseline)
 
         solved = False
-        attempts = row["attempts"]
+        attempts = row.get("attempts", 0)
         moves_solved = 0
         TARGET_MOVES = 2
         puzzle_start_time = time.time()
@@ -174,9 +252,22 @@ def run_puzzle_gui_session():
                 if moves_solved >= TARGET_MOVES:
                     elapsed_seconds = round(time.time() - puzzle_start_time, 1)
                     df.at[idx, "time_spent_sec"] = elapsed_seconds
+                    
+                    if is_blindfold:
+                        tts_engine.say("Correct. Sequence complete.")
+                        tts_engine.runAndWait()
+                    
+                    print(f"\n🌟 Sequence complete in {elapsed_seconds}s!")
+                    print("Grade your performance:")
+                    print(" [1] Hard (Review in 2 days)")
+                    print(" [2] Good (Review in 7 days)")
+                    print(" [3] Easy (Review in 14 days)")
+                    
+                    grade = input("Select (1-3): ").strip()
+                    days_to_add = { '1': 2, '2': 7, '3': 14 }.get(grade, 7)
+                    
                     current_box = df.at[idx, "box_level"] if pd.notna(df.at[idx, "box_level"]) else 1
                     new_box = current_box + 1
-                    days_to_add = {2: 2, 3: 5, 4: 14, 5: 30}.get(new_box, 30)
                     next_date = datetime.date.today() + datetime.timedelta(days=days_to_add)
 
                     df.at[idx, "box_level"] = new_box
@@ -185,11 +276,12 @@ def run_puzzle_gui_session():
                     solved = True
                     puzzles_completed += 1
                     
-                    if is_blindfold:
-                        tts_engine.say("Correct. Sequence complete.")
-                        tts_engine.runAndWait()
-                        
-                    print(f"🌟 Sequence complete in {elapsed_seconds}s! Promoted to Box {new_box}. Next review on {next_date}.")
+                    print(f"Promoted to Box {new_box}. Next review scheduled for {next_date}.")
+                    
+                    ans = input("\n[Enter] Next Puzzle | [A] Analyze Position: ").strip().lower()
+                    if ans == 'a':
+                        run_sandbox(board, engine, gui if not is_blindfold else None, is_blindfold)
+
                 else:
                     engine_reply = engine.play(board, chess.engine.Limit(time=0.5)).move
                     if engine_reply is None:
@@ -197,6 +289,10 @@ def run_puzzle_gui_session():
                         solved = True
                         puzzles_completed += 1
                         print("🏆 Board is terminal. Puzzle solved!")
+                        
+                        ans = input("\n[Enter] Next Puzzle | [A] Analyze Position: ").strip().lower()
+                        if ans == 'a':
+                            run_sandbox(board, engine, gui if not is_blindfold else None, is_blindfold)
                     else:
                         san_move = board.san(engine_reply)
                         board.push(engine_reply)
@@ -221,6 +317,12 @@ def run_puzzle_gui_session():
                 if is_blindfold:
                     tts_engine.say("Inaccuracy. Try again.")
                     tts_engine.runAndWait()
+                
+                ans = input("\n[Enter] Retry Puzzle | [A] Analyze Mistake: ").strip().lower()
+                if ans == 'a':
+                    board.push(move_obj)
+                    run_sandbox(board, engine, gui if not is_blindfold else None, is_blindfold)
+                    board.pop()
                     
                 board.set_fen(fen)
                 moves_solved = 0
@@ -236,7 +338,6 @@ def run_puzzle_gui_session():
 
     engine.quit()
     
-    # Session Analytics Summary
     total_time = round((time.time() - session_start_time) / 60, 1)
     print("\n" + "="*40)
     print(" 🏁 TRAINING SESSION COMPLETE")

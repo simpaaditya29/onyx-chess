@@ -3,6 +3,10 @@ import random
 import chess
 import time
 import chess.polyglot  
+import fetch_games
+import trainer
+import train_model
+import generate_web_dashboard
 
 # Import your game and training modes
 from game_modes import (
@@ -564,9 +568,9 @@ def main_menu():
         print("1. Puzzle Dashboard | 2. PGN Analysis   | 3. Play vs Bot")
         print("4. Pass 'N Play    | 5. Blindfold      | 6. Guess Move")
         print("7. Timed Mode     | 8. 🎓 Opening Coach| 9. 📚 Theory Library")
-        print("10. Sparring Bot  | 11. Blunder Coach | 12. Player Dashboard")
-        print("13. Settings      | 14. Lichess Explor| 15. Exit")
-        
+        print("10. Sparring Bot    | 11. Blunder Coach | 12. Web Dashboard")
+        print("13. Settings        | 14. Lichess Explor| 15. Train ML Model")
+        print("16. Fetch Chess.com | 17. Exit")   
         choice = input("\nSelect path: ").strip()
 
         # Smart PGN Auto-Detector if raw moves are pasted into main menu
@@ -620,9 +624,9 @@ def main_menu():
                     except ValueError:
                         print("❌ Please enter a valid number. Returning to menu.")
             elif choice == '11':
-                play_game_with_blunder_coach(profile)
+                trainer.run_puzzle_gui_session()
             elif choice == '12':
-                show_player_profile_dashboard(profile)
+                generate_web_dashboard.build_dashboard()
             elif choice == '13':
                 open_settings_menu()
             elif choice == '14':
@@ -631,17 +635,21 @@ def main_menu():
                     fen_input = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
                 check_lichess_master_alignment(fen_input)
             elif choice == '15':
+                train_model.train_blunder_classifier()
+            elif choice == '16':
+                user = input("Enter Chess.com username: ").strip()
+                fetch_games.fetch_chesscom_games(user)
+            elif choice == '17':
                 print("\n👋 Thanks for training! See you next time.")
                 break
             else:
                 print("❌ Invalid choice. Please try again.")
 
-        except Exception as e:
+        except Exception as e:  
             print("\n" + "!"*50)
             print(f"⚠️ APPLICATION ERROR CAUGHT: {e}")
             print("⚠️ Returning safely to the main menu...")
             print("!"*50 + "\n")
-
 # ==========================================
 # 🚀 APP EXECUTION 
 # ==========================================

@@ -16,6 +16,12 @@ def generate_ml_dataset():
 
     print("⚙️ Processing data for Machine Learning...")
     
+    # Safely inject missing columns for backward compatibility with older datasets
+    if 'tags' not in df.columns:
+        df['tags'] = 'Untagged'
+    if 'time_spent_sec' not in df.columns:
+        df['time_spent_sec'] = 0.0
+        
     # 1. Select relevant features
     ml_df = df[['fen_before', 'turn', 'cp_loss', 'tags', 'time_spent_sec']].copy()
     
@@ -24,7 +30,7 @@ def generate_ml_dataset():
     ml_df['cp_loss'] = ml_df['cp_loss'].abs()
     ml_df['time_spent_sec'] = ml_df['time_spent_sec'].fillna(0)
     
-    # 3. One-Hot Encode Tactical Tags for classification/clustering
+    # 3. One-Hot Encode Tactical Tags for classification
     tags_expanded = ml_df['tags'].str.get_dummies(sep=', ')
     ml_df = pd.concat([ml_df, tags_expanded], axis=1)
     ml_df = ml_df.drop('tags', axis=1)

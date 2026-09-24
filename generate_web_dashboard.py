@@ -28,6 +28,10 @@ def build_dashboard():
         status_badge = '<span class="badge solved">Solved</span>' if row.get("solved") else '<span class="badge pending">Due</span>'
         tags_display = str(row.get("tags", "None"))
         
+        # Safely pull the new opening theory columns
+        eco = str(row.get("eco", "???"))
+        opening = str(row.get("opening_name", "Unknown"))
+        
         rows_html += f"""
         <tr>
             <td>#{idx + 1}</td>
@@ -36,6 +40,7 @@ def build_dashboard():
             <td>{row.get("turn", "White")}</td>
             <td class="loss">-{abs(int(row.get("cp_loss", 0)))} cp</td>
             <td style="font-size:12px; color:#a8a8b3;">{tags_display}</td>
+            <td style="font-size:12px; color:#3498db;">{eco} - {opening}</td>
         </tr>
         """
 
@@ -52,8 +57,8 @@ def build_dashboard():
         .card {{ background: #202024; border: 1px solid #29292e; border-radius: 8px; padding: 18px; }}
         .card-title {{ font-size: 12px; text-transform: uppercase; color: #a8a8b3; }}
         .card-value {{ font-size: 26px; font-weight: bold; margin-top: 8px; color: #ffffff; }}
-        table {{ width: 100%; border-collapse: collapse; background: #202024; border-radius: 8px; margin-top: 20px; }}
-        th, td {{ padding: 12px 16px; text-align: left; font-size: 14px; border-bottom: 1px solid #29292e; }}
+        table {{ width: 100%; border-collapse: collapse; background: #202024; border-radius: 8px; margin-top: 20px; text-align: left; }}
+        th, td {{ padding: 12px 16px; font-size: 14px; border-bottom: 1px solid #29292e; }}
         th {{ background: #19191b; color: #a8a8b3; }}
         .badge {{ padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }}
         .badge.solved {{ background: #015f43; color: #00b37e; }}
@@ -89,6 +94,7 @@ def build_dashboard():
                 <th>Turn</th>
                 <th>Blunder Cost</th>
                 <th>Tactical Tags</th>
+                <th>Opening / Theory</th>
             </tr>
         </thead>
         <tbody>
