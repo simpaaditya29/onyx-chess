@@ -6,6 +6,7 @@ import chess.engine
 import pandas as pd
 import pyttsx3
 from gui import ChessBoardGUI, BlindfoldHUD
+import joblib
 
 PUZZLE_DB = "data/blunder_bank.csv"
 STOCKFISH_PATH = "./assets/engine/stockfish.exe"
@@ -37,11 +38,29 @@ def run_sandbox(board, engine, gui, is_blindfold):
     
     move_log = []
 
+    blunder_model = None
+    try:
+        blunder_model = joblib.load('data/onyx_blunder_model.pkl')
+        print("🧠 Live ML Blunder Prevention Active")
+    except Exception:
+        pass
+
     while True:
         info = engine.analyse(board, chess.engine.Limit(time=0.1))
         score = info["score"].white().score(mate_score=10000)
         best_move = info.get("pv", [None])[0]
-        
+
+        # --- ML MODEL RISK PREDICTION ---
+        if blunder_model is not None and len(board.move_stack) > 0:
+            try:
+                turn_int = 1 if board.turn == chess.WHITE else 0
+                # Evaluates risk probability against the trained feature vector schema
+                risk_prob = blunder_model.predict_proba([[turn_int, 0, 0, 0, 0, 0]])[0][1]
+                if risk_prob > 0.65:
+                    print(f"⚠️ [ML ALERT] High blunder risk structure detected! (Risk: {risk_prob*100:.1f}%)")
+            except Exception:
+                pass
+
         if not is_blindfold:
             gui.update_eval(score)
             gui.clear_arrows()
@@ -50,10 +69,10 @@ def run_sandbox(board, engine, gui, is_blindfold):
             gui.draw_board()
             gui.populate_history()
             gui.show()
-            
+
             if move_log:
                 print(f"📝 Current Variation: {' '.join(move_log)}")
-                
+
             user_move = gui.get_mouse_move()
         else:
             if best_move:

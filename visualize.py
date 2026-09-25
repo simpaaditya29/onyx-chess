@@ -2,7 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
+import seaborn as sns
 PUZZLE_DB = "data/blunder_bank.csv"
 
 def plot_blunder_trends():
@@ -93,6 +93,65 @@ def plot_spatial_heatmap():
     plt.tight_layout()
     plt.show()
 
+def square_to_coords(square_str):
+    """Converts an algebraic square (e.g., 'e4') to (row, col) matrix coordinates."""
+    if not square_str or len(square_str) < 2:
+        return None
+    
+    file_char = square_str[0].lower()
+    rank_char = square_str[1]
+    
+    if file_char < 'a' or file_char > 'h' or rank_char < '1' or rank_char > '8':
+        return None
+        
+    col = ord(file_char) - ord('a')
+    row = 8 - int(rank_char) # 0 is 8th rank (top), 7 is 1st rank (bottom)
+    return (row, col)
+
+def generate_blunder_heatmap():
+    """Generates an 8x8 spatial density heatmap of blunder destination squares."""
+    puzzle_db = "data/blunder_bank.csv"
+    if not os.path.exists(puzzle_db):
+        print(f"Error: {puzzle_db} not found. Play some games and parse them first!")
+        return
+
+    df = pd.read_csv(puzzle_db)
+    if df.empty or 'played_move' not in df.columns:
+        print("Not enough data to generate a heatmap.")
+        return
+
+    print("🗺️ Mapping spatial blunder coordinates...")
+    heatmap_data = np.zeros((8, 8))
+    
+    valid_moves = 0
+    for move in df['played_move'].dropna():
+        if len(str(move)) >= 4:
+            dest_square = str(move)[2:4]
+            coords = square_to_coords(dest_square)
+            if coords:
+                heatmap_data[coords[0], coords[1]] += 1
+                valid_moves += 1
+
+    if valid_moves == 0:
+        print("No valid algebraic moves found to plot.")
+        return
+
+    plt.style.use('dark_background')
+    plt.figure(figsize=(8, 8))
+    
+    files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+    ranks = ['8', '7', '6', '5', '4', '3', '2', '1']
+    
+    sns.heatmap(heatmap_data, annot=True, fmt="g", cmap="inferno", 
+                xticklabels=files, yticklabels=ranks, cbar=False, 
+                linewidths=0.5, linecolor='#29292e', square=True)
+    
+    plt.title("Onyx Spatial Blind Spot Heatmap\n(Where Your Blunders Land)", 
+              fontsize=16, fontweight='bold', pad=20, color="#00b37e")
+    
+    plt.tight_layout()
+    plt.show()
+
 if __name__ == "__main__":
     plot_blunder_trends()
-    plot_spatial_heatmap()
+    generate_blunder_heatmap()

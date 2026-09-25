@@ -561,16 +561,17 @@ def main_menu():
     while True:
         print("\n" + "="*50)
         print(f"💡 {get_random_tip()}\n")
-        print("♟️  ONYX CHESS ENGINE v6.0 (PRO EDITION) ♟️")
+        print("♟️  ONYX CHESS ENGINE v6.0 (PRO EDITION) ♟️ ")
         print("="*50)
         username = profile.get("username", "Player")
         print(f"👋 Welcome back, {username}!")
-        print("1. Puzzle Dashboard | 2. PGN Analysis   | 3. Play vs Bot")
-        print("4. Pass 'N Play    | 5. Blindfold      | 6. Guess Move")
-        print("7. Timed Mode     | 8. 🎓 Opening Coach| 9. 📚 Theory Library")
-        print("10. Sparring Bot    | 11. Blunder Coach | 12. Web Dashboard")
-        print("13. Settings        | 14. Lichess Explor| 15. Train ML Model")
-        print("16. Fetch Chess.com | 17. Exit")   
+        print("1. Puzzle Dashboard | 2. PGN Analysis    | 3. Play vs Bot")
+        print("4. Pass 'N Play    | 5. Blindfold       | 6. Guess Move")
+        print("7. Timed Mode       | 8. 🎓 Opening Coach| 9. 📚 Theory Library")
+        print("10. Sparring Bot    | 11. Blunder Coach  | 12. Web Dashboard")
+        print("13. Settings        | 14. Lichess Explor | 15. Train ML Model")
+        print("16. Fetch Chess.com | 17. Exit")
+        
         choice = input("\nSelect path: ").strip()
 
         # Smart PGN Auto-Detector if raw moves are pasted into main menu
@@ -595,7 +596,7 @@ def main_menu():
             elif choice == '7':
                 play_timed_mode(profile)
             elif choice == '8':
-                play_opening_interrogator(profile)  # <--- NOW LAUNCHES INTERROGATOR
+                play_opening_interrogator(profile) 
             elif choice == '9':
                 launch_theory_library(profile)
             elif choice == '10':
@@ -615,10 +616,7 @@ def main_menu():
                         if 0 <= cat_choice < len(categories):
                             active_category = categories[cat_choice]
                             print(f"\n✅ You selected: {active_category}")
-                            
-                            # Start the game with the selected category
                             play_human_sparring_bot(profile, active_category=active_category)
-                            
                         else:
                             print("❌ Invalid selection. Returning to menu.")
                     except ValueError:
@@ -638,20 +636,28 @@ def main_menu():
                 train_model.train_blunder_classifier()
             elif choice == '16':
                 user = input("Enter Chess.com username: ").strip()
-                fetch_games.fetch_chesscom_games(user)
+                downloaded_file = fetch_games.fetch_chesscom_games(user)
+                
+                if downloaded_file:
+                    run_parse = input(f"\n📥 Automatically analyze {downloaded_file} for blunders? (y/n): ").strip().lower()
+                    if run_parse == 'y':
+                        import subprocess
+                        print("\n⚙️ Handing off to Stockfish Engine...")
+                        subprocess.run(["python", "mistake_parser.py", downloaded_file])
             elif choice == '17':
                 print("\n👋 Thanks for training! See you next time.")
                 break
             else:
                 print("❌ Invalid choice. Please try again.")
 
-        except Exception as e:  
+        except Exception as e:
             print("\n" + "!"*50)
             print(f"⚠️ APPLICATION ERROR CAUGHT: {e}")
             print("⚠️ Returning safely to the main menu...")
-            print("!"*50 + "\n")
-# ==========================================
-# 🚀 APP EXECUTION 
-# ==========================================
+            print("!"*50 + "\n"
+                  )
+
+
+            
 if __name__ == "__main__":
     main_menu()
